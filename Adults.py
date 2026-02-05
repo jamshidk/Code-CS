@@ -13,7 +13,7 @@ from sklearn.neural_network import MLPClassifier
 
 df = pd.read_csv("adult.csv")
 
-x = df.drop(columns=["class"], errors="ignore", axis=1)
+x = df.drop(columns=["class"], errors="ignore")
 y = df["class"]
 
 # Encode categorical columns to numeric (DecisionTree and sklearn need numeric input)
