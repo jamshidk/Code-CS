@@ -71,6 +71,8 @@ def train_mlp_sgd(model, X_train, y_train, X_val, y_val, epochs=200, hidden_size
 
 
     train_losses=[]
+    train_f1s=[]
+    train_accs=[]
     val_losses=[]
     val_f1s=[]
     val_accs=[]
@@ -94,7 +96,28 @@ def train_mlp_sgd(model, X_train, y_train, X_val, y_val, epochs=200, hidden_size
 
 
         model.eval()
+
+# ---- compute TRAIN metrics ----
+        train_preds = []
+        train_targets = []
+        with torch.no_grad():
+            for X_batch, y_batch in train_loader:
+                logits=model(X_batch)
+                preds=torch.argmax(logits, dim=1)
+                train_preds.append(preds.cpu().numpy())
+                train_targets.append(y_batch.cpu().numpy())
+
+        train_true = np.concatenate(train_targets)
+        train_pred = np.concatenate(train_preds)
+
+        train_acc = accuracy_score(train_true, train_pred)
+        train_f1 = f1_score(train_true, train_pred, average="macro", zero_division=0)
+
+        train_accs.append(train_acc)
+        train_f1s.append(train_f1)
+
         running_val_loss=0.0
+        
         all_preds=[]
         all_targets=[]
         with torch.no_grad():
@@ -115,7 +138,7 @@ def train_mlp_sgd(model, X_train, y_train, X_val, y_val, epochs=200, hidden_size
         val_f1=f1_score(y_true, y_pred, average='macro', zero_division=0)
         val_f1s.append(val_f1)
         val_accs.append(val_acc)
-        print(f"Epoch {epoch+1}/{epochs}, Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_acc:.4f}, Validation F1 Score: {val_f1:.4f}")
+        print(f"Epoch {epoch}/{epochs}, Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_acc:.4f}, Validation F1 Score: {val_f1:.4f}")
 
         if val_loss < best_val_loss-1e-4:
             best_val_loss=val_loss
@@ -132,6 +155,8 @@ def train_mlp_sgd(model, X_train, y_train, X_val, y_val, epochs=200, hidden_size
     history={
         'train_losses': train_losses,
         'val_losses': val_losses,
+        'train_accs': train_accs,
+        'train_f1s': train_f1s,
         'val_f1s': val_f1s,
         'val_accs': val_accs
     }
@@ -166,11 +191,12 @@ plt.show()
 
 
 plt.figure(figsize=(8,5))
+plt.plot(history['train_f1s'], label="Train Macro-F1")
 plt.plot(history['val_f1s'], label="Validation Macro-F1")
 plt.xlabel("Epoch")
 plt.ylabel("Macro-F1")
-plt.title("Validation Macro-F1 vs Epoch")
-plt.savefig("val_f1s.png")
+plt.title("Train vs Validation Macro-F1")
+plt.savefig("train_val_macro_f1.png")
 plt.legend()
 plt.grid(True)
 plt.show()
