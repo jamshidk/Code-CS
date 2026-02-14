@@ -144,7 +144,7 @@ def train_mlp_sgd(model, X_train, y_train, X_val, y_val, epochs=200, lr=1e-3, ba
 
 
 # Keep SAME architecture / training protocol for all activations
-hidden_size = (64,64)      # or (64,64) if you prefer, but keep constant
+hidden_size = (32,32,32,32)      # or (64,64) if you prefer, but keep constant
 epochs = 1000
 lr = 1e-3
 batch_size = 128
